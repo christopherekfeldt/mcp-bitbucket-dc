@@ -1,7 +1,5 @@
 """Project-related MCP tools."""
 
-from __future__ import annotations
-
 from typing import Annotated, Optional
 
 from fastmcp import Context

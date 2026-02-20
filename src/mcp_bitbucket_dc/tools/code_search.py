@@ -1,7 +1,5 @@
 """Code search MCP tool — ported from friend's code to async httpx."""
 
-from __future__ import annotations
-
 from typing import Annotated, Optional
 
 from fastmcp import Context
