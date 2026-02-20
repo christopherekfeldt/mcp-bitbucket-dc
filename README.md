@@ -1,6 +1,6 @@
 # mcp-bitbucket-dc
 
-[![PyPI Version](https://img.shields.io/pypi/v/mcp-bitbucket-dc)](https://pypi.org/project/mcp-bitbucket-dc/)
+[![PyPI Version](https://img.shields.io/pypi/v/mcp-bitbucket-dc?label=PyPI&cacheSeconds=300)](https://pypi.org/project/mcp-bitbucket-dc/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 MCP (Model Context Protocol) server for **Bitbucket Data Center**. Enables AI assistants to search code, browse files, manage pull requests, and explore repositories through a standardized interface.
