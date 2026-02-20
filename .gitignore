@@ -14,4 +14,3 @@ venv/
 .pytest_cache/
 *.so
 .DS_Store
-friends_code.py
