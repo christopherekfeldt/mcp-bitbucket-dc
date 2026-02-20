@@ -1,0 +1,61 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcp-bitbucket-dc"
+dynamic = ["version"]
+description = "MCP server for Bitbucket Data Center — code search, file browsing, PRs, commits, and more."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Christopher Ekfeldt" }]
+keywords = ["mcp", "bitbucket", "atlassian", "data-center", "code-search"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Software Development :: Version Control :: Git",
+]
+dependencies = [
+    "fastmcp>=2.0.0",
+    "httpx>=0.27.0",
+    "pydantic>=2.0",
+    "click>=8.1.0",
+]
+
+[project.scripts]
+mcp-bitbucket-dc = "mcp_bitbucket_dc:main"
+
+[project.urls]
+Homepage = "https://github.com/christopherekfeldt/mcp-bitbucket-dc"
+Repository = "https://github.com/christopherekfeldt/mcp-bitbucket-dc"
+Issues = "https://github.com/christopherekfeldt/mcp-bitbucket-dc/issues"
+
+[tool.hatch.version]
+source = "vcs"
+fallback-version = "0.1.0"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_bitbucket_dc"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
+]
