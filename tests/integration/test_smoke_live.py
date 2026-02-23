@@ -11,7 +11,6 @@ import pytest
 from mcp_bitbucket_dc.client import BitbucketClient
 from mcp_bitbucket_dc.config import BitbucketConfig
 
-
 pytestmark = pytest.mark.integration
 
 
