@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import os
-
 import pytest
 
 from mcp_bitbucket_dc.config import BitbucketConfig

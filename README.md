@@ -1,11 +1,12 @@
 # mcp-bitbucket-dc
 
 [![PyPI Version](https://img.shields.io/pypi/v/mcp-bitbucket-dc?label=PyPI&cacheSeconds=300)](https://pypi.org/project/mcp-bitbucket-dc/)
+[![CD: Publish to PyPI](https://github.com/christopherekfeldt/mcp-bitbucket-dc/actions/workflows/publish.yml/badge.svg)](https://github.com/christopherekfeldt/mcp-bitbucket-dc/actions/workflows/publish.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 MCP (Model Context Protocol) server for **Bitbucket Data Center**. Enables AI assistants to search code, browse files, manage pull requests, and explore repositories through a standardized interface.
 
-Built with [FastMCP](https://github.com/jlowin/fastmcp) in Python. Installs via `uvx` — no Node.js required.
+Built with [FastMCP](https://github.com/jlowin/fastmcp) in Python. Installs via `uvx`.
 
 ## Quick Start
 
@@ -149,6 +150,9 @@ uvx mcp-bitbucket-dc --transport streamable-http --port 8000
 git clone https://github.com/christopherekfeldt/mcp-bitbucket-dc.git
 cd mcp-bitbucket-dc
 uv sync
+
+# Install git hooks
+uv run pre-commit install
 
 # Run locally
 export BITBUCKET_HOST=git.yourcompany.com

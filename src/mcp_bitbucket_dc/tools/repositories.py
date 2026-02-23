@@ -1,6 +1,6 @@
 """Repository-related MCP tools."""
 
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastmcp import Context
 from pydantic import Field
@@ -20,7 +20,9 @@ def register_repository_tools(mcp, get_client) -> None:
         ctx: Context,
         project_key: Annotated[str, Field(description="The project key (e.g. 'PROJ')")],
         start: Annotated[int, Field(description="Pagination start index")] = 0,
-        limit: Annotated[int, Field(description="Max results to return (1-1000)", ge=1, le=1000)] = 25,
+        limit: Annotated[
+            int, Field(description="Max results to return (1-1000)", ge=1, le=1000)
+        ] = 25,
     ) -> str:
         """Get repositories for a Bitbucket project.
 
@@ -50,7 +52,5 @@ def register_repository_tools(mcp, get_client) -> None:
     ) -> str:
         """Get details of a specific repository including clone URLs and configuration."""
         client: BitbucketClient = get_client(ctx)
-        data = await client.get(
-            f"/rest/api/latest/projects/{project_key}/repos/{repository_slug}"
-        )
+        data = await client.get(f"/rest/api/latest/projects/{project_key}/repos/{repository_slug}")
         return format_repository_detail(data)

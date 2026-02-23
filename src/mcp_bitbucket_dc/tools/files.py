@@ -6,7 +6,7 @@ from fastmcp import Context
 from pydantic import Field
 
 from ..client import BitbucketClient
-from ..formatting import format_browse, format_branches, format_file_list, format_tags
+from ..formatting import format_branches, format_browse, format_file_list, format_tags
 
 
 def register_file_tools(mcp, get_client) -> None:

@@ -30,7 +30,9 @@ def register_commit_tools(mcp, get_client) -> None:
         ] = None,
         until: Annotated[
             Optional[str],
-            Field(description="Commit hash or ref — include commits reachable from this (default: default branch HEAD)"),
+            Field(
+                description="Commit hash or ref — include commits reachable from this (default: default branch HEAD)"
+            ),
         ] = None,
         start: Annotated[int, Field(description="Pagination start index")] = 0,
         limit: Annotated[int, Field(description="Max results (1-100)", ge=1, le=100)] = 25,

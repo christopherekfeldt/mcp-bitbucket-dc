@@ -129,9 +129,7 @@ class BitbucketClient:
                 status, "Authentication failed — check your Personal Access Token"
             )
         if status == 403:
-            raise BitbucketClientError(
-                status, f"Permission denied: {messages}"
-            )
+            raise BitbucketClientError(status, f"Permission denied: {messages}")
         if status == 404:
             raise BitbucketClientError(status, f"Not found: {messages}")
 

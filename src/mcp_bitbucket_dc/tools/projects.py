@@ -6,7 +6,7 @@ from fastmcp import Context
 from pydantic import Field
 
 from ..client import BitbucketClient
-from ..formatting import format_project, format_projects, format_repository_detail
+from ..formatting import format_project, format_projects
 
 
 def register_project_tools(mcp, get_client) -> None:
@@ -23,12 +23,12 @@ def register_project_tools(mcp, get_client) -> None:
         ] = None,
         permission: Annotated[
             Optional[str],
-            Field(
-                description="Filter by permission: PROJECT_VIEW, PROJECT_ADMIN, REPO_READ, etc."
-            ),
+            Field(description="Filter by permission: PROJECT_VIEW, PROJECT_ADMIN, REPO_READ, etc."),
         ] = None,
         start: Annotated[int, Field(description="Pagination start index")] = 0,
-        limit: Annotated[int, Field(description="Max results to return (1-1000)", ge=1, le=1000)] = 25,
+        limit: Annotated[
+            int, Field(description="Max results to return (1-1000)", ge=1, le=1000)
+        ] = 25,
     ) -> str:
         """Get a list of Bitbucket projects.
 

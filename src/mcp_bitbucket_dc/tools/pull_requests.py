@@ -182,9 +182,7 @@ def register_pull_request_tools(mcp, get_client) -> None:
         ] = None,
         whitespace: Annotated[
             Optional[str],
-            Field(
-                description="Whitespace handling: SHOW, IGNORE_ALL, or IGNORE_TRAILING"
-            ),
+            Field(description="Whitespace handling: SHOW, IGNORE_ALL, or IGNORE_TRAILING"),
         ] = None,
     ) -> str:
         """Get the text diff for a specific file in a pull request.
@@ -314,9 +312,7 @@ def register_pull_request_tools(mcp, get_client) -> None:
             ),
         ],
         title: Annotated[Optional[str], Field(description="New PR title")] = None,
-        description: Annotated[
-            Optional[str], Field(description="New PR description")
-        ] = None,
+        description: Annotated[Optional[str], Field(description="New PR description")] = None,
         reviewers: Annotated[
             Optional[list[str]],
             Field(description="Full list of reviewer usernames (replaces existing)"),
@@ -370,8 +366,7 @@ def register_pull_request_tools(mcp, get_client) -> None:
         """
         client: BitbucketClient = get_client(ctx)
         data = await client.get(
-            f"/rest/api/latest/projects/{project_key}/repos/{repository_slug}"
-            f"/conditions",
+            f"/rest/api/latest/projects/{project_key}/repos/{repository_slug}/conditions",
             params={"sourceRefId": source_ref, "targetRefId": target_ref},
         )
         # Parse the conditions response
@@ -380,7 +375,9 @@ def register_pull_request_tools(mcp, get_client) -> None:
         for cond in conditions:
             reviewers_list = cond.get("reviewers", [])
             for r in reviewers_list:
-                lines.append(f"- **{r.get('displayName', r.get('name', 'unknown'))}** (`{r.get('name', '')}`)")
+                lines.append(
+                    f"- **{r.get('displayName', r.get('name', 'unknown'))}** (`{r.get('name', '')}`)"
+                )
             required_approvals = cond.get("requiredApprovals", 0)
             if required_approvals:
                 lines.append(f"\n*Required approvals: {required_approvals}*")
