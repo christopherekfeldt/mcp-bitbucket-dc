@@ -1,6 +1,7 @@
 # mcp-bitbucket-dc
 
 [![PyPI Version](https://img.shields.io/pypi/v/mcp-bitbucket-dc?label=PyPI&cacheSeconds=300)](https://pypi.org/project/mcp-bitbucket-dc/)
+[![Main Push Checks](https://github.com/christopherekfeldt/mcp-bitbucket-dc/actions/workflows/test.yml/badge.svg?branch=main&event=push)](https://github.com/christopherekfeldt/mcp-bitbucket-dc/actions/workflows/test.yml)
 [![CD: Publish to PyPI](https://github.com/christopherekfeldt/mcp-bitbucket-dc/actions/workflows/publish.yml/badge.svg)](https://github.com/christopherekfeldt/mcp-bitbucket-dc/actions/workflows/publish.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
