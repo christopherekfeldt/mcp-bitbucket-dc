@@ -5,15 +5,6 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from .models import (
-    Activity,
-    Commit,
-    HitContext,
-    PullRequest,
-    PullRequestChange,
-    SearchResult,
-)
-
 
 def _ts(epoch_ms: Optional[int]) -> str:
     """Convert epoch milliseconds to readable date string."""
@@ -29,7 +20,9 @@ def _ts(epoch_ms: Optional[int]) -> str:
 def format_project(p: dict[str, Any]) -> str:
     desc = p.get("description", "") or ""
     public = "Public" if p.get("public") else "Private"
-    return f"- **{p.get('name', '')}** (`{p.get('key', '')}`) — {public}{f' — {desc}' if desc else ''}"
+    return (
+        f"- **{p.get('name', '')}** (`{p.get('key', '')}`) — {public}{f' — {desc}' if desc else ''}"
+    )
 
 
 def format_projects(projects: list[dict[str, Any]], total: int, is_last: bool) -> str:
@@ -103,8 +96,7 @@ def format_tags(tags: list[dict[str, Any]], total: int, is_last: bool) -> str:
     lines = [f"# Tags ({total} total)\n"]
     for t in tags:
         lines.append(
-            f"- `{t.get('displayId', '')}` — "
-            f"commit: `{(t.get('latestCommit', '') or '')[:12]}`"
+            f"- `{t.get('displayId', '')}` — commit: `{(t.get('latestCommit', '') or '')[:12]}`"
         )
     if not is_last:
         lines.append("\n*More tags available — increase `start` to paginate.*")

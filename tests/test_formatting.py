@@ -3,12 +3,8 @@
 from __future__ import annotations
 
 from mcp_bitbucket_dc.formatting import (
-    format_branches,
     format_browse,
-    format_commits,
     format_projects,
-    format_pull_requests,
-    format_repositories,
     format_search_results,
 )
 
@@ -37,9 +33,7 @@ class TestFormatSearchResults:
                 "repository": {"name": "backend", "project": {"key": "PROJ"}},
                 "file": "src/main/App.java",
                 "hitCount": 3,
-                "hitContexts": [
-                    [{"line": 10, "text": "public class <em>App</em> {"}]
-                ],
+                "hitContexts": [[{"line": 10, "text": "public class <em>App</em> {"}]],
             }
         ]
         md = format_search_results(results, query="App", total=1, is_last=True)

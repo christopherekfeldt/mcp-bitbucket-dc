@@ -1,6 +1,6 @@
 """Code search MCP tool — ported from friend's code to async httpx."""
 
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastmcp import Context
 from pydantic import Field
@@ -37,7 +37,9 @@ def register_code_search_tools(mcp, get_client) -> None:
         ] = 25,
         start: Annotated[
             int,
-            Field(description="Starting index for pagination (use nextStart from previous results)"),
+            Field(
+                description="Starting index for pagination (use nextStart from previous results)"
+            ),
         ] = 0,
     ) -> str:
         """Search code across all Bitbucket repositories using the search API.
