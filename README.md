@@ -52,6 +52,11 @@ Ask your AI assistant:
 
 ## Tools Reference
 
+Most read/query tools support `response_format`:
+
+- `markdown` (default): human-readable output
+- `json`: raw structured API response
+
 ### Code Search (NEW)
 
 | Tool | Description |
@@ -147,11 +152,13 @@ If you run on a different Bitbucket DC version, please open an issue with result
 
 ```bash
 # SSE transport (for remote/multi-user setups)
-uvx mcp-bitbucket-dc --transport sse --port 8000
+uvx mcp-bitbucket-dc --transport sse --host 0.0.0.0 --port 8000
 
 # Streamable HTTP
-uvx mcp-bitbucket-dc --transport streamable-http --port 8000
+uvx mcp-bitbucket-dc --transport streamable-http --host 0.0.0.0 --port 8000
 ```
+
+By default, HTTP-based transports bind to `127.0.0.1` for safer local development.
 
 ## Development
 

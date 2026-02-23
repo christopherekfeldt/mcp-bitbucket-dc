@@ -1,6 +1,6 @@
 """Pull request MCP tools."""
 
-from typing import Annotated, Optional
+from typing import Annotated, Literal, Optional
 
 from fastmcp import Context
 from pydantic import Field
@@ -11,6 +11,7 @@ from ..formatting import (
     format_pr_changes,
     format_pull_request_detail,
     format_pull_requests,
+    render_response,
 )
 
 
@@ -19,7 +20,13 @@ def register_pull_request_tools(mcp, get_client) -> None:
 
     @mcp.tool(
         tags={"bitbucket", "read"},
-        annotations={"title": "Get Pull Requests", "readOnlyHint": True},
+        annotations={
+            "title": "Get Pull Requests",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_get_pull_requests(
         ctx: Context,
@@ -41,6 +48,10 @@ def register_pull_request_tools(mcp, get_client) -> None:
             Optional[str],
             Field(description="Filter PRs by title text"),
         ] = None,
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
         start: Annotated[int, Field(description="Pagination start index")] = 0,
         limit: Annotated[int, Field(description="Max results (1-100)", ge=1, le=100)] = 25,
     ) -> str:
@@ -65,21 +76,32 @@ def register_pull_request_tools(mcp, get_client) -> None:
             start=start,
             limit=limit,
         )
-        return format_pull_requests(
+        markdown = format_pull_requests(
             data.get("values", []),
             total=data.get("size", 0),
             is_last=data.get("isLastPage", True),
         )
+        return render_response(response_format, markdown, data)
 
     @mcp.tool(
         tags={"bitbucket", "read"},
-        annotations={"title": "Get Pull Request", "readOnlyHint": True},
+        annotations={
+            "title": "Get Pull Request",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_get_pull_request(
         ctx: Context,
         project_key: Annotated[str, Field(description="The project key")],
         repository_slug: Annotated[str, Field(description="The repository slug")],
         pull_request_id: Annotated[int, Field(description="The pull request ID number")],
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
     ) -> str:
         """Get full details of a specific pull request including description and reviewers."""
         client: BitbucketClient = get_client(ctx)
@@ -87,17 +109,28 @@ def register_pull_request_tools(mcp, get_client) -> None:
             f"/rest/api/latest/projects/{project_key}/repos/{repository_slug}"
             f"/pull-requests/{pull_request_id}"
         )
-        return format_pull_request_detail(data)
+        markdown = format_pull_request_detail(data)
+        return render_response(response_format, markdown, data)
 
     @mcp.tool(
         tags={"bitbucket", "read"},
-        annotations={"title": "Get PR Comments", "readOnlyHint": True},
+        annotations={
+            "title": "Get PR Comments",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_get_pull_request_comments(
         ctx: Context,
         project_key: Annotated[str, Field(description="The project key")],
         repository_slug: Annotated[str, Field(description="The repository slug")],
         pull_request_id: Annotated[int, Field(description="The pull request ID number")],
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
         start: Annotated[int, Field(description="Pagination start index")] = 0,
         limit: Annotated[int, Field(description="Max results (1-100)", ge=1, le=100)] = 25,
     ) -> str:
@@ -113,15 +146,22 @@ def register_pull_request_tools(mcp, get_client) -> None:
             start=start,
             limit=limit,
         )
-        return format_pr_activities(
+        markdown = format_pr_activities(
             data.get("values", []),
             total=data.get("size", 0),
             is_last=data.get("isLastPage", True),
         )
+        return render_response(response_format, markdown, data)
 
     @mcp.tool(
         tags={"bitbucket", "read"},
-        annotations={"title": "Get PR Changes", "readOnlyHint": True},
+        annotations={
+            "title": "Get PR Changes",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_get_pull_request_changes(
         ctx: Context,
@@ -136,6 +176,10 @@ def register_pull_request_tools(mcp, get_client) -> None:
             Optional[bool],
             Field(description="Include comment counts per file"),
         ] = None,
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
         start: Annotated[int, Field(description="Pagination start index")] = 0,
         limit: Annotated[int, Field(description="Max results (1-1000)", ge=1, le=1000)] = 25,
     ) -> str:
@@ -156,15 +200,22 @@ def register_pull_request_tools(mcp, get_client) -> None:
             start=start,
             limit=limit,
         )
-        return format_pr_changes(
+        markdown = format_pr_changes(
             data.get("values", []),
             total=data.get("size", 0),
             is_last=data.get("isLastPage", True),
         )
+        return render_response(response_format, markdown, data)
 
     @mcp.tool(
         tags={"bitbucket", "read"},
-        annotations={"title": "Get PR Diff", "readOnlyHint": True},
+        annotations={
+            "title": "Get PR Diff",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_get_pull_request_diff(
         ctx: Context,
@@ -184,6 +235,10 @@ def register_pull_request_tools(mcp, get_client) -> None:
             Optional[str],
             Field(description="Whitespace handling: SHOW, IGNORE_ALL, or IGNORE_TRAILING"),
         ] = None,
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
     ) -> str:
         """Get the text diff for a specific file in a pull request.
 
@@ -202,11 +257,25 @@ def register_pull_request_tools(mcp, get_client) -> None:
             f"/pull-requests/{pull_request_id}/diff/{path}",
             params=params,
         )
-        return f"# Diff: `{path}` (PR #{pull_request_id})\n\n```diff\n{raw_diff}\n```"
+        markdown = f"# Diff: `{path}` (PR #{pull_request_id})\n\n```diff\n{raw_diff}\n```"
+        data = {
+            "project_key": project_key,
+            "repository_slug": repository_slug,
+            "pull_request_id": pull_request_id,
+            "path": path,
+            "diff": raw_diff,
+        }
+        return render_response(response_format, markdown, data)
 
     @mcp.tool(
         tags={"bitbucket", "write"},
-        annotations={"title": "Post PR Comment", "readOnlyHint": False},
+        annotations={
+            "title": "Post PR Comment",
+            "readOnlyHint": False,
+            "destructiveHint": True,
+            "idempotentHint": False,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_post_pull_request_comment(
         ctx: Context,
@@ -256,7 +325,13 @@ def register_pull_request_tools(mcp, get_client) -> None:
 
     @mcp.tool(
         tags={"bitbucket", "write"},
-        annotations={"title": "Create Pull Request", "readOnlyHint": False},
+        annotations={
+            "title": "Create Pull Request",
+            "readOnlyHint": False,
+            "destructiveHint": True,
+            "idempotentHint": False,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_create_pull_request(
         ctx: Context,
@@ -297,7 +372,13 @@ def register_pull_request_tools(mcp, get_client) -> None:
 
     @mcp.tool(
         tags={"bitbucket", "write"},
-        annotations={"title": "Update Pull Request", "readOnlyHint": False},
+        annotations={
+            "title": "Update Pull Request",
+            "readOnlyHint": False,
+            "destructiveHint": True,
+            "idempotentHint": False,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_update_pull_request(
         ctx: Context,
@@ -350,7 +431,13 @@ def register_pull_request_tools(mcp, get_client) -> None:
 
     @mcp.tool(
         tags={"bitbucket", "read"},
-        annotations={"title": "Get Required Reviewers", "readOnlyHint": True},
+        annotations={
+            "title": "Get Required Reviewers",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_get_required_reviewers(
         ctx: Context,
@@ -358,6 +445,10 @@ def register_pull_request_tools(mcp, get_client) -> None:
         repository_slug: Annotated[str, Field(description="The repository slug")],
         source_ref: Annotated[str, Field(description="Source branch ref ID")],
         target_ref: Annotated[str, Field(description="Target branch ref ID")],
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
     ) -> str:
         """Get required reviewers for a potential pull request between two branches.
 
@@ -383,4 +474,5 @@ def register_pull_request_tools(mcp, get_client) -> None:
                 lines.append(f"\n*Required approvals: {required_approvals}*")
         if len(lines) == 1:
             lines.append("No required reviewers configured for this branch combination.")
-        return "\n".join(lines)
+        markdown = "\n".join(lines)
+        return render_response(response_format, markdown, conditions)

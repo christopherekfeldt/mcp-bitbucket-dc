@@ -1,12 +1,12 @@
 """Commit-related MCP tools."""
 
-from typing import Annotated, Optional
+from typing import Annotated, Literal, Optional
 
 from fastmcp import Context
 from pydantic import Field
 
 from ..client import BitbucketClient
-from ..formatting import format_commits
+from ..formatting import format_commits, render_response
 
 
 def register_commit_tools(mcp, get_client) -> None:
@@ -14,7 +14,13 @@ def register_commit_tools(mcp, get_client) -> None:
 
     @mcp.tool(
         tags={"bitbucket", "read"},
-        annotations={"title": "Get Commits", "readOnlyHint": True},
+        annotations={
+            "title": "Get Commits",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_get_commits(
         ctx: Context,
@@ -36,6 +42,10 @@ def register_commit_tools(mcp, get_client) -> None:
         ] = None,
         start: Annotated[int, Field(description="Pagination start index")] = 0,
         limit: Annotated[int, Field(description="Max results (1-100)", ge=1, le=100)] = 25,
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
     ) -> str:
         """Get commits for a repository.
 
@@ -57,8 +67,9 @@ def register_commit_tools(mcp, get_client) -> None:
             start=start,
             limit=limit,
         )
-        return format_commits(
+        markdown = format_commits(
             data.get("values", []),
             total=data.get("size", 0),
             is_last=data.get("isLastPage", True),
         )
+        return render_response(response_format, markdown, data)

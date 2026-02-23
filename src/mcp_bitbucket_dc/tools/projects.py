@@ -1,12 +1,12 @@
 """Project-related MCP tools."""
 
-from typing import Annotated, Optional
+from typing import Annotated, Literal, Optional
 
 from fastmcp import Context
 from pydantic import Field
 
 from ..client import BitbucketClient
-from ..formatting import format_project, format_projects
+from ..formatting import format_project, format_projects, render_response
 
 
 def register_project_tools(mcp, get_client) -> None:
@@ -14,7 +14,13 @@ def register_project_tools(mcp, get_client) -> None:
 
     @mcp.tool(
         tags={"bitbucket", "read"},
-        annotations={"title": "Get Projects", "readOnlyHint": True},
+        annotations={
+            "title": "Get Projects",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_get_projects(
         ctx: Context,
@@ -29,6 +35,10 @@ def register_project_tools(mcp, get_client) -> None:
         limit: Annotated[
             int, Field(description="Max results to return (1-1000)", ge=1, le=1000)
         ] = 25,
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
     ) -> str:
         """Get a list of Bitbucket projects.
 
@@ -44,21 +54,33 @@ def register_project_tools(mcp, get_client) -> None:
         data = await client.get_paged(
             "/rest/api/latest/projects", params=params, start=start, limit=limit
         )
-        return format_projects(
+        markdown = format_projects(
             data.get("values", []),
             total=data.get("size", 0),
             is_last=data.get("isLastPage", True),
         )
+        return render_response(response_format, markdown, data)
 
     @mcp.tool(
         tags={"bitbucket", "read"},
-        annotations={"title": "Get Project", "readOnlyHint": True},
+        annotations={
+            "title": "Get Project",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_get_project(
         ctx: Context,
         project_key: Annotated[str, Field(description="The project key (e.g. 'PROJ')")],
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
     ) -> str:
         """Get details of a specific Bitbucket project by its key."""
         client: BitbucketClient = get_client(ctx)
         data = await client.get(f"/rest/api/latest/projects/{project_key}")
-        return format_project(data)
+        markdown = format_project(data)
+        return render_response(response_format, markdown, data)

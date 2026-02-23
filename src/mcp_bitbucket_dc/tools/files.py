@@ -1,12 +1,18 @@
 """File browsing, content, and branch/tag MCP tools."""
 
-from typing import Annotated, Optional
+from typing import Annotated, Literal, Optional
 
 from fastmcp import Context
 from pydantic import Field
 
 from ..client import BitbucketClient
-from ..formatting import format_branches, format_browse, format_file_list, format_tags
+from ..formatting import (
+    format_branches,
+    format_browse,
+    format_file_list,
+    format_tags,
+    render_response,
+)
 
 
 def register_file_tools(mcp, get_client) -> None:
@@ -14,7 +20,13 @@ def register_file_tools(mcp, get_client) -> None:
 
     @mcp.tool(
         tags={"bitbucket", "read"},
-        annotations={"title": "Browse Files", "readOnlyHint": True},
+        annotations={
+            "title": "Browse Files",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_browse(
         ctx: Context,
@@ -30,6 +42,10 @@ def register_file_tools(mcp, get_client) -> None:
         ] = None,
         start: Annotated[int, Field(description="Pagination start index")] = 0,
         limit: Annotated[int, Field(description="Max results (1-1000)", ge=1, le=1000)] = 500,
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
     ) -> str:
         """Browse the file tree of a repository.
 
@@ -44,11 +60,18 @@ def register_file_tools(mcp, get_client) -> None:
         if at:
             params["at"] = at
         data = await client.get_paged(endpoint, params=params, start=start, limit=limit)
-        return format_browse(data, path or "/")
+        markdown = format_browse(data, path or "/")
+        return render_response(response_format, markdown, data)
 
     @mcp.tool(
         tags={"bitbucket", "read"},
-        annotations={"title": "Get File Content", "readOnlyHint": True},
+        annotations={
+            "title": "Get File Content",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_get_file_content(
         ctx: Context,
@@ -59,6 +82,10 @@ def register_file_tools(mcp, get_client) -> None:
             Optional[str],
             Field(description="Branch, tag, or commit (default: default branch)"),
         ] = None,
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
     ) -> str:
         """Get the raw content of a file from a repository.
 
@@ -75,11 +102,19 @@ def register_file_tools(mcp, get_client) -> None:
         )
         # Determine file extension for syntax highlighting
         ext = path.rsplit(".", 1)[-1] if "." in path else ""
-        return f"# File: `{path}`\n\n```{ext}\n{content}\n```"
+        markdown = f"# File: `{path}`\n\n```{ext}\n{content}\n```"
+        data = {"path": path, "at": at, "content": content}
+        return render_response(response_format, markdown, data)
 
     @mcp.tool(
         tags={"bitbucket", "read"},
-        annotations={"title": "List Files", "readOnlyHint": True},
+        annotations={
+            "title": "List Files",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_list_files(
         ctx: Context,
@@ -95,6 +130,10 @@ def register_file_tools(mcp, get_client) -> None:
         ] = None,
         start: Annotated[int, Field(description="Pagination start index")] = 0,
         limit: Annotated[int, Field(description="Max results (1-5000)", ge=1, le=5000)] = 500,
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
     ) -> str:
         """Recursively list all file paths in a repository or sub-directory.
 
@@ -109,16 +148,23 @@ def register_file_tools(mcp, get_client) -> None:
         if at:
             params["at"] = at
         data = await client.get_paged(endpoint, params=params, start=start, limit=limit)
-        return format_file_list(
+        markdown = format_file_list(
             data.get("values", []),
             path=path or "/",
             total=data.get("size", len(data.get("values", []))),
             is_last=data.get("isLastPage", True),
         )
+        return render_response(response_format, markdown, data)
 
     @mcp.tool(
         tags={"bitbucket", "read"},
-        annotations={"title": "Get Branches", "readOnlyHint": True},
+        annotations={
+            "title": "Get Branches",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_get_branches(
         ctx: Context,
@@ -134,6 +180,10 @@ def register_file_tools(mcp, get_client) -> None:
         ] = None,
         start: Annotated[int, Field(description="Pagination start index")] = 0,
         limit: Annotated[int, Field(description="Max results (1-1000)", ge=1, le=1000)] = 25,
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
     ) -> str:
         """List branches in a repository.
 
@@ -152,15 +202,22 @@ def register_file_tools(mcp, get_client) -> None:
             start=start,
             limit=limit,
         )
-        return format_branches(
+        markdown = format_branches(
             data.get("values", []),
             total=data.get("size", 0),
             is_last=data.get("isLastPage", True),
         )
+        return render_response(response_format, markdown, data)
 
     @mcp.tool(
         tags={"bitbucket", "read"},
-        annotations={"title": "Get Tags", "readOnlyHint": True},
+        annotations={
+            "title": "Get Tags",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_get_tags(
         ctx: Context,
@@ -176,6 +233,10 @@ def register_file_tools(mcp, get_client) -> None:
         ] = None,
         start: Annotated[int, Field(description="Pagination start index")] = 0,
         limit: Annotated[int, Field(description="Max results (1-1000)", ge=1, le=1000)] = 25,
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
     ) -> str:
         """List tags in a repository.
 
@@ -194,8 +255,9 @@ def register_file_tools(mcp, get_client) -> None:
             start=start,
             limit=limit,
         )
-        return format_tags(
+        markdown = format_tags(
             data.get("values", []),
             total=data.get("size", 0),
             is_last=data.get("isLastPage", True),
         )
+        return render_response(response_format, markdown, data)
