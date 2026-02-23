@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from typing import Any, Optional
 
@@ -12,6 +13,13 @@ def _ts(epoch_ms: Optional[int]) -> str:
         return "unknown"
     dt = datetime.fromtimestamp(epoch_ms / 1000, tz=timezone.utc)
     return dt.strftime("%Y-%m-%d %H:%M UTC")
+
+
+def render_response(response_format: str, markdown: str, data: Any) -> str:
+    """Return markdown or JSON output depending on the requested format."""
+    if response_format == "json":
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    return markdown
 
 
 # ── Projects & Repos ────────────────────────────────────────────────────────

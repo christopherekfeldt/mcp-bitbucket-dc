@@ -18,7 +18,7 @@ def main() -> None:
         default="stdio",
         help="MCP transport protocol",
     )
-    @click.option("--host", default="0.0.0.0", help="Host to bind (SSE/HTTP only)")
+    @click.option("--host", default="127.0.0.1", help="Host to bind (SSE/HTTP only)")
     @click.option("--port", default=8000, type=int, help="Port to bind (SSE/HTTP only)")
     @click.option("--log-level", default="WARNING", help="Logging level")
     def run(transport: str, host: str, port: int, log_level: str) -> None:

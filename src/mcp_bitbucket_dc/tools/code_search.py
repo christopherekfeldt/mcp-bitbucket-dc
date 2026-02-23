@@ -1,12 +1,12 @@
 """Code search MCP tool — ported from friend's code to async httpx."""
 
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastmcp import Context
 from pydantic import Field
 
 from ..client import BitbucketClient
-from ..formatting import format_search_results
+from ..formatting import format_search_results, render_response
 
 
 def register_code_search_tools(mcp, get_client) -> None:
@@ -14,7 +14,13 @@ def register_code_search_tools(mcp, get_client) -> None:
 
     @mcp.tool(
         tags={"bitbucket", "read"},
-        annotations={"title": "Code Search", "readOnlyHint": True},
+        annotations={
+            "title": "Code Search",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_code_search(
         ctx: Context,
@@ -41,6 +47,10 @@ def register_code_search_tools(mcp, get_client) -> None:
                 description="Starting index for pagination (use nextStart from previous results)"
             ),
         ] = 0,
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
     ) -> str:
         """Search code across all Bitbucket repositories using the search API.
 
@@ -66,9 +76,10 @@ def register_code_search_tools(mcp, get_client) -> None:
             params={"avatarSize": 64},
         )
         code_section = data.get("code", {})
-        return format_search_results(
+        markdown = format_search_results(
             results=code_section.get("values", []),
             query=query,
             total=code_section.get("count", 0),
             is_last=code_section.get("isLastPage", True),
         )
+        return render_response(response_format, markdown, code_section)

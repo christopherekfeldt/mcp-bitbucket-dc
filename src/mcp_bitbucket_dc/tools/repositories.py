@@ -1,12 +1,12 @@
 """Repository-related MCP tools."""
 
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastmcp import Context
 from pydantic import Field
 
 from ..client import BitbucketClient
-from ..formatting import format_repositories, format_repository_detail
+from ..formatting import format_repositories, format_repository_detail, render_response
 
 
 def register_repository_tools(mcp, get_client) -> None:
@@ -14,7 +14,13 @@ def register_repository_tools(mcp, get_client) -> None:
 
     @mcp.tool(
         tags={"bitbucket", "read"},
-        annotations={"title": "Get Repositories", "readOnlyHint": True},
+        annotations={
+            "title": "Get Repositories",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_get_repositories(
         ctx: Context,
@@ -23,6 +29,10 @@ def register_repository_tools(mcp, get_client) -> None:
         limit: Annotated[
             int, Field(description="Max results to return (1-1000)", ge=1, le=1000)
         ] = 25,
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
     ) -> str:
         """Get repositories for a Bitbucket project.
 
@@ -35,22 +45,34 @@ def register_repository_tools(mcp, get_client) -> None:
             start=start,
             limit=limit,
         )
-        return format_repositories(
+        markdown = format_repositories(
             data.get("values", []),
             total=data.get("size", 0),
             is_last=data.get("isLastPage", True),
         )
+        return render_response(response_format, markdown, data)
 
     @mcp.tool(
         tags={"bitbucket", "read"},
-        annotations={"title": "Get Repository", "readOnlyHint": True},
+        annotations={
+            "title": "Get Repository",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
     )
     async def bitbucket_get_repository(
         ctx: Context,
         project_key: Annotated[str, Field(description="The project key (e.g. 'PROJ')")],
         repository_slug: Annotated[str, Field(description="The repository slug")],
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
     ) -> str:
         """Get details of a specific repository including clone URLs and configuration."""
         client: BitbucketClient = get_client(ctx)
         data = await client.get(f"/rest/api/latest/projects/{project_key}/repos/{repository_slug}")
-        return format_repository_detail(data)
+        markdown = format_repository_detail(data)
+        return render_response(response_format, markdown, data)

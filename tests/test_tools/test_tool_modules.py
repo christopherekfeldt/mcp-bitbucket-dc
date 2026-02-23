@@ -1,5 +1,6 @@
 """Tool-level tests for MCP tool modules with mocked API responses."""
 
+import json
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -17,10 +18,12 @@ class FakeMCP:
 
     def __init__(self):
         self.tools = {}
+        self.tool_kwargs = {}
 
     def tool(self, *args, **kwargs):
         def decorator(fn):
             self.tools[fn.__name__] = fn
+            self.tool_kwargs[fn.__name__] = kwargs
             return fn
 
         return decorator
@@ -53,6 +56,24 @@ async def test_projects_module_tools(fake_client):
     assert "Projects" in result
     assert "Platform" in result
     fake_client.get_paged.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_projects_module_tools_json_response(fake_client):
+    mcp = FakeMCP()
+    register_project_tools(mcp, lambda _ctx: fake_client)
+
+    fake_client.get_paged.return_value = {
+        "values": [{"name": "Platform", "key": "PLAT", "public": False}],
+        "size": 1,
+        "isLastPage": True,
+    }
+
+    result = await mcp.tools["bitbucket_get_projects"](ctx=object(), response_format="json")
+    payload = json.loads(result)
+
+    assert payload["values"][0]["key"] == "PLAT"
+    assert payload["size"] == 1
 
 
 @pytest.mark.asyncio
@@ -138,6 +159,35 @@ async def test_code_search_module_tools(fake_client):
 
 
 @pytest.mark.asyncio
+async def test_code_search_module_tools_json_response(fake_client):
+    mcp = FakeMCP()
+    register_code_search_tools(mcp, lambda _ctx: fake_client)
+
+    fake_client.post.return_value = {
+        "code": {
+            "values": [
+                {
+                    "repository": {"name": "backend", "project": {"key": "PLAT"}},
+                    "file": "src/main/App.java",
+                    "hitCount": 1,
+                    "hitContexts": [[{"line": 10, "text": "class <em>App</em>"}]],
+                }
+            ],
+            "count": 1,
+            "isLastPage": True,
+        }
+    }
+
+    result = await mcp.tools["bitbucket_code_search"](
+        ctx=object(), query="App", response_format="json"
+    )
+    payload = json.loads(result)
+
+    assert payload["count"] == 1
+    assert payload["values"][0]["file"] == "src/main/App.java"
+
+
+@pytest.mark.asyncio
 async def test_files_module_tools(fake_client):
     mcp = FakeMCP()
     register_file_tools(mcp, lambda _ctx: fake_client)
@@ -154,6 +204,26 @@ async def test_files_module_tools(fake_client):
     assert "# File: `src/app.py`" in result
     assert "print('hello')" in result
     fake_client.get_raw.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_files_module_tools_json_response(fake_client):
+    mcp = FakeMCP()
+    register_file_tools(mcp, lambda _ctx: fake_client)
+
+    fake_client.get_raw.return_value = "print('hello')"
+
+    result = await mcp.tools["bitbucket_get_file_content"](
+        ctx=object(),
+        project_key="PLAT",
+        repository_slug="backend",
+        path="src/app.py",
+        response_format="json",
+    )
+    payload = json.loads(result)
+
+    assert payload["path"] == "src/app.py"
+    assert payload["content"] == "print('hello')"
 
 
 @pytest.mark.asyncio
@@ -186,3 +256,36 @@ async def test_pull_requests_module_tools(fake_client):
     assert "Pull Requests" in result
     assert "feat: improve search" in result
     fake_client.get_paged.assert_awaited_once()
+
+
+def test_tool_annotations_include_required_hints():
+    mcp = FakeMCP()
+    register_project_tools(mcp, lambda _ctx: MagicMock())
+    register_repository_tools(mcp, lambda _ctx: MagicMock())
+    register_commit_tools(mcp, lambda _ctx: MagicMock())
+    register_code_search_tools(mcp, lambda _ctx: MagicMock())
+    register_file_tools(mcp, lambda _ctx: MagicMock())
+    register_pull_request_tools(mcp, lambda _ctx: MagicMock())
+
+    required = {"readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint"}
+    for tool_name, kwargs in mcp.tool_kwargs.items():
+        annotations = kwargs.get("annotations", {})
+        assert required.issubset(annotations.keys()), f"Missing annotation keys for {tool_name}"
+
+
+def test_write_tools_have_non_readonly_annotations():
+    mcp = FakeMCP()
+    register_pull_request_tools(mcp, lambda _ctx: MagicMock())
+
+    write_tools = [
+        "bitbucket_post_pull_request_comment",
+        "bitbucket_create_pull_request",
+        "bitbucket_update_pull_request",
+    ]
+
+    for tool_name in write_tools:
+        annotations = mcp.tool_kwargs[tool_name]["annotations"]
+        assert annotations["readOnlyHint"] is False
+        assert annotations["destructiveHint"] is True
+        assert annotations["idempotentHint"] is False
+        assert annotations["openWorldHint"] is True
