@@ -46,6 +46,9 @@ packages = ["src/mcp_bitbucket_dc"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "integration: live integration tests against a real Bitbucket DC instance",
+]
 
 [tool.ruff]
 target-version = "py310"

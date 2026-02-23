@@ -133,6 +133,15 @@ UserService AND ext:java AND project:CORE
 
 \* Provide either `BITBUCKET_HOST` or `BITBUCKET_URL`, not both.
 
+## Support Matrix
+
+| Component | Version(s) | Verification |
+|---|---|---|
+| Bitbucket Data Center | 8.19.5 | Live smoke tests run locally against a real server |
+| Python runtime | 3.10, 3.11, 3.12, 3.13 | GitHub Actions CI (`test` workflow matrix) |
+
+If you run on a different Bitbucket DC version, please open an issue with results.
+
 ## Alternative Transports
 
 ```bash
@@ -161,6 +170,10 @@ uv run mcp-bitbucket-dc
 
 # Run tests
 uv run pytest
+
+# Run live smoke tests against a real/staging Bitbucket DC
+# (requires BITBUCKET_HOST or BITBUCKET_URL + BITBUCKET_API_TOKEN)
+RUN_LIVE_SMOKE=1 uv run pytest -m integration -q
 ```
 
 ## License
