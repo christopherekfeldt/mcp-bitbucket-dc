@@ -57,13 +57,13 @@ Most read/query tools support `response_format`:
 - `markdown` (default): human-readable output
 - `json`: raw structured API response
 
-### Code Search (NEW)
+### Code Search
 
 | Tool | Description |
 |---|---|
 | `bitbucket_code_search` | Search code across all repos with Lucene syntax (`ext:java`, `lang:python`, `repo:name`, `project:KEY`, `AND`/`OR`/`NOT`) |
 
-### File Browsing (NEW)
+### File Browsing
 
 | Tool | Description |
 |---|---|
@@ -147,6 +147,11 @@ UserService AND ext:java AND project:CORE
 | Python runtime | 3.10, 3.11, 3.12, 3.13 | GitHub Actions CI (`test` workflow matrix) |
 
 If you run on a different Bitbucket DC version, please open an issue with results.
+
+## Acknowledgements
+
+- Many tools in this project were inspired by [atlassian-dc-mcp](https://github.com/b1ff/atlassian-dc-mcp).
+- Code search functionality was inspired by [@beapirate](https://github.com/beapirate) and prior related implementation work.
 
 ## Alternative Transports
 
