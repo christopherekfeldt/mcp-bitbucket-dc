@@ -9,6 +9,11 @@ MCP (Model Context Protocol) server for **Bitbucket Data Center**. Enables AI as
 
 Built with [FastMCP](https://github.com/jlowin/fastmcp) in Python. Installs via `uvx`.
 
+## Acknowledgements
+
+- Many tools in this project were inspired by [atlassian-dc-mcp](https://github.com/b1ff/atlassian-dc-mcp).
+- Code search functionality was inspired by [@beapirate](https://github.com/beapirate) and prior related implementation work.
+
 ## Quick Start
 
 ### 1. Generate a Personal Access Token
@@ -148,11 +153,6 @@ UserService AND ext:java AND project:CORE
 
 If you run on a different Bitbucket DC version, please open an issue with results.
 
-## Acknowledgements
-
-- Many tools in this project were inspired by [atlassian-dc-mcp](https://github.com/b1ff/atlassian-dc-mcp).
-- Code search functionality was inspired by [@beapirate](https://github.com/beapirate) and prior related implementation work.
-
 ## Alternative Transports
 
 ```bash
@@ -188,6 +188,8 @@ uv run pytest
 # (requires BITBUCKET_HOST or BITBUCKET_URL + BITBUCKET_API_TOKEN)
 RUN_LIVE_SMOKE=1 uv run pytest -m integration -q
 ```
+
+Contributor/agent workflow guidance: see [AGENTS.md](AGENTS.md).
 
 ## License
 
