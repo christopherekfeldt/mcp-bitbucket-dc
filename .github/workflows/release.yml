@@ -1,0 +1,119 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g. 1.0.0, 0.6.0)"
+        required: true
+        type: string
+      dry_run:
+        description: "Dry run — skip tag, publish, and release"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write   # Required for trusted publishing (OIDC)
+  contents: write   # Required for creating tags and releases
+
+jobs:
+  # ── Run full test suite before releasing ──────────────────────────────────
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Run tests
+        run: uv run pytest -v
+
+  # ── Lint check ────────────────────────────────────────────────────────────
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v3
+      - uses: pre-commit/action@v3.0.1
+
+  # ── Create tag, publish to PyPI, create GitHub Release ────────────────────
+  release:
+    needs: [test, pre-commit]
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate version format
+        run: |
+          VERSION="${{ inputs.version }}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Invalid version format: $VERSION (expected: X.Y.Z)"
+            exit 1
+          fi
+          echo "TAG=v${VERSION}" >> "$GITHUB_ENV"
+
+      - name: Check tag does not already exist
+        run: |
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "❌ Tag $TAG already exists"
+            exit 1
+          fi
+
+      - name: Create Git tag
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Build package
+        run: uv build
+
+      - name: Publish to PyPI
+        if: ${{ !inputs.dry_run }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Create GitHub Release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$TAG" \
+            --generate-notes \
+            --title "$TAG"
+
+      - name: Summary
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "🧪 Dry run completed — no tag, publish, or release created"
+          else
+            echo "🎉 Release completed successfully!"
+          fi
+          echo "🏷️ Tag: $TAG"
+          echo "📦 PyPI: https://pypi.org/project/mcp-bitbucket-dc/${TAG#v}/"

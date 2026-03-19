@@ -13,7 +13,7 @@ Guidance for AI agents and contributors working in this repository.
 - `src/mcp_bitbucket_dc/`: server, client, config, models, formatting, and tool modules.
 - `src/mcp_bitbucket_dc/tools/`: user-facing Bitbucket tool implementations.
 - `tests/`: unit tests and integration smoke tests.
-- `.github/workflows/`: CI (`test.yml`) and publish (`publish.yml`).
+- `.github/workflows/`: CI (`test.yml`), publish (`publish.yml`), and release (`release.yml`).
 
 ## Local Setup
 
@@ -65,15 +65,14 @@ uv run pre-commit run --all-files
 
 ## Release Workflow
 
-Publishing is tag-driven via GitHub Actions (`publish.yml`):
+Releases are automated via `release.yml` (workflow dispatch):
 
-1. Ensure tests are passing.
-2. Create annotated semver tag (example):
-   ```bash
-   git tag -a v0.5.0 -m "v0.5.0"
-   git push origin v0.5.0
-   ```
-3. Wait for the `Publish to PyPI` workflow to run after tag push.
+1. Ensure tests pass and PR is merged to `main`.
+2. Go to **Actions → Release → Run workflow**.
+3. Enter the version (e.g. `1.0.0`) and optionally enable dry run.
+4. The workflow runs tests, creates the git tag, publishes to PyPI, and creates a GitHub Release with auto-generated notes.
+
+The legacy `publish.yml` still works as a fallback (triggered by manual tag push).
 
 ## Documentation Expectations
 
