@@ -326,6 +326,83 @@ def register_pull_request_tools(mcp, get_client) -> None:
     @mcp.tool(
         tags={"bitbucket", "write"},
         annotations={
+            "title": "Update PR Comment",
+            "readOnlyHint": False,
+            "destructiveHint": True,
+            "idempotentHint": False,
+            "openWorldHint": True,
+        },
+    )
+    async def bitbucket_update_pull_request_comment(
+        ctx: Context,
+        project_key: Annotated[str, Field(description="The project key")],
+        repository_slug: Annotated[str, Field(description="The repository slug")],
+        pull_request_id: Annotated[int, Field(description="The pull request ID number")],
+        comment_id: Annotated[int, Field(description="The comment ID to update")],
+        version: Annotated[
+            int,
+            Field(
+                description="Current version of the comment (for optimistic locking — "
+                "get from bitbucket_get_pull_request_comments)"
+            ),
+        ],
+        text: Annotated[str, Field(description="The new comment text (supports Markdown)")],
+    ) -> str:
+        """Update an existing comment on a pull request.
+
+        Requires the current comment `version` number for optimistic locking.
+        """
+        client: BitbucketClient = get_client(ctx)
+        body: dict = {"text": text, "version": version}
+        data = await client.put(
+            f"/rest/api/latest/projects/{project_key}/repos/{repository_slug}"
+            f"/pull-requests/{pull_request_id}/comments/{comment_id}",
+            json=body,
+        )
+        return (
+            f"Comment {comment_id} updated successfully (new version: {data.get('version', '?')})"
+        )
+
+    @mcp.tool(
+        tags={"bitbucket", "write"},
+        annotations={
+            "title": "Delete PR Comment",
+            "readOnlyHint": False,
+            "destructiveHint": True,
+            "idempotentHint": False,
+            "openWorldHint": True,
+        },
+    )
+    async def bitbucket_delete_pull_request_comment(
+        ctx: Context,
+        project_key: Annotated[str, Field(description="The project key")],
+        repository_slug: Annotated[str, Field(description="The repository slug")],
+        pull_request_id: Annotated[int, Field(description="The pull request ID number")],
+        comment_id: Annotated[int, Field(description="The comment ID to delete")],
+        version: Annotated[
+            int,
+            Field(
+                description="Current version of the comment (for optimistic locking — "
+                "get from bitbucket_get_pull_request_comments)"
+            ),
+        ],
+    ) -> str:
+        """Delete a comment from a pull request.
+
+        Requires the current comment `version` number for optimistic locking.
+        Only the comment author or an admin can delete a comment.
+        """
+        client: BitbucketClient = get_client(ctx)
+        await client.delete(
+            f"/rest/api/latest/projects/{project_key}/repos/{repository_slug}"
+            f"/pull-requests/{pull_request_id}/comments/{comment_id}"
+            f"?version={version}"
+        )
+        return f"Comment {comment_id} deleted successfully."
+
+    @mcp.tool(
+        tags={"bitbucket", "write"},
+        annotations={
             "title": "Create Pull Request",
             "readOnlyHint": False,
             "destructiveHint": True,

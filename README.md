@@ -1,6 +1,8 @@
 # mcp-bitbucket-dc
 
 [![PyPI Version](https://img.shields.io/pypi/v/mcp-bitbucket-dc?label=PyPI&cacheSeconds=300)](https://pypi.org/project/mcp-bitbucket-dc/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/mcp-bitbucket-dc?label=Downloads%2Fmonth)](https://pypi.org/project/mcp-bitbucket-dc/)
+[![Total Downloads](https://static.pepy.tech/badge/mcp-bitbucket-dc)](https://pepy.tech/project/mcp-bitbucket-dc)
 [![Main Push Checks](https://github.com/christopherekfeldt/mcp-bitbucket-dc/actions/workflows/test.yml/badge.svg?branch=main&event=push)](https://github.com/christopherekfeldt/mcp-bitbucket-dc/actions/workflows/test.yml)
 [![CD: Publish to PyPI](https://github.com/christopherekfeldt/mcp-bitbucket-dc/actions/workflows/publish.yml/badge.svg)](https://github.com/christopherekfeldt/mcp-bitbucket-dc/actions/workflows/publish.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -77,6 +79,7 @@ Most read/query tools support `response_format`:
 | `bitbucket_list_files` | Recursively list all file paths in a repo |
 | `bitbucket_get_branches` | List branches (filterable) |
 | `bitbucket_get_tags` | List tags (filterable) |
+| `bitbucket_create_branch` | Create a new branch from a branch, tag, or commit |
 
 ### Projects & Repositories
 
@@ -84,6 +87,7 @@ Most read/query tools support `response_format`:
 |---|---|
 | `bitbucket_get_projects` | List projects (filterable by name/permission) |
 | `bitbucket_get_project` | Get project details |
+| `bitbucket_search_repositories` | Search repos across all projects (no project key required) |
 | `bitbucket_get_repositories` | List repos in a project |
 | `bitbucket_get_repository` | Get repo details with clone URLs |
 
@@ -97,6 +101,8 @@ Most read/query tools support `response_format`:
 | `bitbucket_get_pull_request_changes` | Get files changed in a PR |
 | `bitbucket_get_pull_request_diff` | Get diff for a file in a PR |
 | `bitbucket_post_pull_request_comment` | Post a comment (general or inline) |
+| `bitbucket_update_pull_request_comment` | Update an existing PR comment |
+| `bitbucket_delete_pull_request_comment` | Delete a PR comment |
 | `bitbucket_create_pull_request` | Create a new PR |
 | `bitbucket_update_pull_request` | Update PR title/description/reviewers |
 | `bitbucket_get_required_reviewers` | Get required reviewers for a branch pair |
@@ -106,6 +112,8 @@ Most read/query tools support `response_format`:
 | Tool | Description |
 |---|---|
 | `bitbucket_get_commits` | List commits (filter by path, ref range) |
+| `bitbucket_get_commit` | Get full details of a single commit |
+| `bitbucket_get_commit_diff` | Get the diff for a specific commit |
 
 ## Search Query Syntax
 
