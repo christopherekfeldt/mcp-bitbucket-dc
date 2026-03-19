@@ -261,3 +261,40 @@ def register_file_tools(mcp, get_client) -> None:
             is_last=data.get("isLastPage", True),
         )
         return render_response(response_format, markdown, data)
+
+    @mcp.tool(
+        tags={"bitbucket", "write"},
+        annotations={
+            "title": "Create Branch",
+            "readOnlyHint": False,
+            "destructiveHint": False,
+            "idempotentHint": False,
+            "openWorldHint": True,
+        },
+    )
+    async def bitbucket_create_branch(
+        ctx: Context,
+        project_key: Annotated[str, Field(description="The project key")],
+        repository_slug: Annotated[str, Field(description="The repository slug")],
+        name: Annotated[str, Field(description="New branch name (e.g. 'feature/my-branch')")],
+        start_point: Annotated[
+            str,
+            Field(
+                description="Branch, tag, or commit hash to branch from "
+                "(e.g. 'main', 'develop', or a commit SHA)"
+            ),
+        ],
+    ) -> str:
+        """Create a new branch in a repository.
+
+        Creates a branch at the given start point (branch name, tag, or commit hash).
+        """
+        client: BitbucketClient = get_client(ctx)
+        body: dict = {"name": name, "startPoint": start_point}
+        data = await client.post(
+            f"/rest/api/latest/projects/{project_key}/repos/{repository_slug}/branches",
+            json=body,
+        )
+        display_id = data.get("displayId", name)
+        latest = (data.get("latestCommit", "") or "")[:12]
+        return f"Branch `{display_id}` created successfully at `{latest}`."

@@ -35,6 +35,7 @@ def fake_client():
     client.get = AsyncMock()
     client.post = AsyncMock()
     client.put = AsyncMock()
+    client.delete = AsyncMock()
     client.get_raw = AsyncMock()
     client.get_paged = AsyncMock()
     return client
@@ -281,6 +282,8 @@ def test_write_tools_have_non_readonly_annotations():
         "bitbucket_post_pull_request_comment",
         "bitbucket_create_pull_request",
         "bitbucket_update_pull_request",
+        "bitbucket_update_pull_request_comment",
+        "bitbucket_delete_pull_request_comment",
     ]
 
     for tool_name in write_tools:
@@ -289,3 +292,246 @@ def test_write_tools_have_non_readonly_annotations():
         assert annotations["destructiveHint"] is True
         assert annotations["idempotentHint"] is False
         assert annotations["openWorldHint"] is True
+
+
+def test_write_tools_file_module_annotations():
+    mcp = FakeMCP()
+    register_file_tools(mcp, lambda _ctx: MagicMock())
+
+    annotations = mcp.tool_kwargs["bitbucket_create_branch"]["annotations"]
+    assert annotations["readOnlyHint"] is False
+    assert annotations["destructiveHint"] is False
+    assert annotations["idempotentHint"] is False
+    assert annotations["openWorldHint"] is True
+
+
+# ── New tool tests ──────────────────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test_get_commit(fake_client):
+    mcp = FakeMCP()
+    register_commit_tools(mcp, lambda _ctx: fake_client)
+
+    fake_client.get.return_value = {
+        "id": "abcdef1234567890",
+        "displayId": "abcdef1234",
+        "message": "fix: resolve null pointer\n\nDetailed description here.",
+        "author": {"name": "dev", "emailAddress": "dev@example.com"},
+        "committer": {"name": "dev", "emailAddress": "dev@example.com"},
+        "authorTimestamp": 1700000000000,
+        "parents": [{"id": "parent123", "displayId": "parent12"}],
+    }
+
+    result = await mcp.tools["bitbucket_get_commit"](
+        ctx=object(),
+        project_key="PLAT",
+        repository_slug="backend",
+        commit_id="abcdef1234567890",
+    )
+
+    assert "Commit" in result
+    assert "fix: resolve null pointer" in result
+    assert "dev" in result
+    fake_client.get.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_get_commit_json(fake_client):
+    mcp = FakeMCP()
+    register_commit_tools(mcp, lambda _ctx: fake_client)
+
+    fake_client.get.return_value = {
+        "id": "abcdef1234567890",
+        "displayId": "abcdef1234",
+        "message": "fix: something",
+        "author": {"name": "dev", "emailAddress": "dev@example.com"},
+        "committer": {"name": "dev", "emailAddress": "dev@example.com"},
+        "authorTimestamp": 1700000000000,
+        "parents": [],
+    }
+
+    result = await mcp.tools["bitbucket_get_commit"](
+        ctx=object(),
+        project_key="PLAT",
+        repository_slug="backend",
+        commit_id="abcdef1234567890",
+        response_format="json",
+    )
+    payload = json.loads(result)
+    assert payload["id"] == "abcdef1234567890"
+
+
+@pytest.mark.asyncio
+async def test_get_commit_diff(fake_client):
+    mcp = FakeMCP()
+    register_commit_tools(mcp, lambda _ctx: fake_client)
+
+    fake_client.get_raw.return_value = (
+        "--- a/src/app.py\n+++ b/src/app.py\n@@ -1,3 +1,4 @@\n+import os\n import sys"
+    )
+
+    result = await mcp.tools["bitbucket_get_commit_diff"](
+        ctx=object(),
+        project_key="PLAT",
+        repository_slug="backend",
+        commit_id="abcdef1234",
+    )
+
+    assert "Diff for commit" in result
+    assert "+import os" in result
+    fake_client.get_raw.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_get_commit_diff_with_path(fake_client):
+    mcp = FakeMCP()
+    register_commit_tools(mcp, lambda _ctx: fake_client)
+
+    fake_client.get_raw.return_value = "--- a/file.py\n+++ b/file.py\n@@ -1 +1 @@\n-old\n+new"
+
+    result = await mcp.tools["bitbucket_get_commit_diff"](
+        ctx=object(),
+        project_key="PLAT",
+        repository_slug="backend",
+        commit_id="abcdef1234",
+        path="file.py",
+    )
+
+    assert "`file.py`" in result
+    fake_client.get_raw.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_search_repositories(fake_client):
+    mcp = FakeMCP()
+    register_repository_tools(mcp, lambda _ctx: fake_client)
+
+    fake_client.get_paged.return_value = {
+        "values": [
+            {
+                "name": "backend",
+                "slug": "backend",
+                "state": "AVAILABLE",
+                "project": {"key": "PLAT", "name": "Platform"},
+            },
+            {
+                "name": "frontend",
+                "slug": "frontend",
+                "state": "AVAILABLE",
+                "project": {"key": "PLAT", "name": "Platform"},
+            },
+        ],
+        "size": 2,
+        "isLastPage": True,
+    }
+
+    result = await mcp.tools["bitbucket_search_repositories"](
+        ctx=object(),
+        name="end",
+    )
+
+    assert "Repositories" in result
+    assert "backend" in result
+    assert "frontend" in result
+    fake_client.get_paged.assert_awaited_once()
+    call_args = fake_client.get_paged.call_args
+    assert call_args[0][0] == "/rest/api/latest/repos"
+
+
+@pytest.mark.asyncio
+async def test_search_repositories_json(fake_client):
+    mcp = FakeMCP()
+    register_repository_tools(mcp, lambda _ctx: fake_client)
+
+    fake_client.get_paged.return_value = {
+        "values": [
+            {
+                "name": "backend",
+                "slug": "backend",
+                "state": "AVAILABLE",
+                "project": {"key": "PLAT"},
+            }
+        ],
+        "size": 1,
+        "isLastPage": True,
+    }
+
+    result = await mcp.tools["bitbucket_search_repositories"](
+        ctx=object(),
+        response_format="json",
+    )
+    payload = json.loads(result)
+    assert payload["values"][0]["slug"] == "backend"
+
+
+@pytest.mark.asyncio
+async def test_update_pull_request_comment(fake_client):
+    mcp = FakeMCP()
+    register_pull_request_tools(mcp, lambda _ctx: fake_client)
+
+    fake_client.put.return_value = {"id": 100, "version": 2, "text": "Updated text"}
+
+    result = await mcp.tools["bitbucket_update_pull_request_comment"](
+        ctx=object(),
+        project_key="PLAT",
+        repository_slug="backend",
+        pull_request_id=42,
+        comment_id=100,
+        version=1,
+        text="Updated text",
+    )
+
+    assert "updated successfully" in result
+    assert "100" in result
+    fake_client.put.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_delete_pull_request_comment(fake_client):
+    mcp = FakeMCP()
+    register_pull_request_tools(mcp, lambda _ctx: fake_client)
+
+    fake_client.delete.return_value = {}
+
+    result = await mcp.tools["bitbucket_delete_pull_request_comment"](
+        ctx=object(),
+        project_key="PLAT",
+        repository_slug="backend",
+        pull_request_id=42,
+        comment_id=100,
+        version=1,
+    )
+
+    assert "deleted successfully" in result
+    assert "100" in result
+    fake_client.delete.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_create_branch(fake_client):
+    mcp = FakeMCP()
+    register_file_tools(mcp, lambda _ctx: fake_client)
+
+    fake_client.post.return_value = {
+        "id": "refs/heads/feature/new-thing",
+        "displayId": "feature/new-thing",
+        "type": "BRANCH",
+        "latestCommit": "abcdef123456",
+        "isDefault": False,
+    }
+
+    result = await mcp.tools["bitbucket_create_branch"](
+        ctx=object(),
+        project_key="PLAT",
+        repository_slug="backend",
+        name="feature/new-thing",
+        start_point="main",
+    )
+
+    assert "feature/new-thing" in result
+    assert "created successfully" in result
+    fake_client.post.assert_awaited_once()
+    call_body = fake_client.post.call_args[1]["json"]
+    assert call_body["name"] == "feature/new-thing"
+    assert call_body["startPoint"] == "main"

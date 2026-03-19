@@ -1,6 +1,6 @@
 """Repository-related MCP tools."""
 
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Optional
 
 from fastmcp import Context
 from pydantic import Field
@@ -11,6 +11,66 @@ from ..formatting import format_repositories, format_repository_detail, render_r
 
 def register_repository_tools(mcp, get_client) -> None:
     """Register repository tools on the MCP server."""
+
+    @mcp.tool(
+        tags={"bitbucket", "read"},
+        annotations={
+            "title": "Search Repositories",
+            "readOnlyHint": True,
+            "destructiveHint": False,
+            "idempotentHint": True,
+            "openWorldHint": True,
+        },
+    )
+    async def bitbucket_search_repositories(
+        ctx: Context,
+        name: Annotated[
+            Optional[str],
+            Field(description="Filter repositories by name (substring match)"),
+        ] = None,
+        project_name: Annotated[
+            Optional[str],
+            Field(description="Filter by project name (substring match)"),
+        ] = None,
+        permission: Annotated[
+            Optional[str],
+            Field(description="Filter by permission: REPO_READ, REPO_WRITE, or REPO_ADMIN"),
+        ] = None,
+        start: Annotated[int, Field(description="Pagination start index")] = 0,
+        limit: Annotated[
+            int, Field(description="Max results to return (1-1000)", ge=1, le=1000)
+        ] = 25,
+        response_format: Annotated[
+            Literal["markdown", "json"],
+            Field(description="Output format: markdown (default) or json"),
+        ] = "markdown",
+    ) -> str:
+        """Search repositories across all projects.
+
+        Returns repositories the authenticated user has access to, optionally
+        filtered by name, project name, or permission level. Unlike
+        bitbucket_get_repositories, this does not require a project key.
+        """
+        client: BitbucketClient = get_client(ctx)
+        params: dict = {}
+        if name:
+            params["name"] = name
+        if project_name:
+            params["projectname"] = project_name
+        if permission:
+            params["permission"] = permission
+        data = await client.get_paged(
+            "/rest/api/latest/repos",
+            params=params,
+            start=start,
+            limit=limit,
+        )
+        markdown = format_repositories(
+            data.get("values", []),
+            total=data.get("size", 0),
+            is_last=data.get("isLastPage", True),
+        )
+        return render_response(response_format, markdown, data)
 
     @mcp.tool(
         tags={"bitbucket", "read"},

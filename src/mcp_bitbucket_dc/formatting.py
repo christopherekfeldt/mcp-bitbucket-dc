@@ -130,6 +130,22 @@ def format_commits(commits: list[dict[str, Any]], total: int, is_last: bool) -> 
     return "\n".join(lines)
 
 
+def format_commit_detail(c: dict[str, Any]) -> str:
+    """Format a single commit with full detail."""
+    author = c.get("author", {})
+    committer = c.get("committer", {})
+    parents = c.get("parents", [])
+    parent_ids = ", ".join(f"`{p.get('displayId', p.get('id', '?'))[:12]}`" for p in parents)
+    return (
+        f"# Commit `{(c.get('displayId', '') or c.get('id', ''))[:12]}`\n\n"
+        f"- **Author:** {author.get('name', 'unknown')} <{author.get('emailAddress', '')}>\n"
+        f"- **Date:** {_ts(c.get('authorTimestamp'))}\n"
+        f"- **Committer:** {committer.get('name', 'unknown')} <{committer.get('emailAddress', '')}>\n"
+        f"- **Parents:** {parent_ids or 'None (root commit)'}\n\n"
+        f"## Message\n\n{c.get('message', '') or 'No message.'}"
+    )
+
+
 # ── Pull Requests ───────────────────────────────────────────────────────────
 
 
