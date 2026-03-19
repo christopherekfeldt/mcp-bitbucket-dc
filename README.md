@@ -4,7 +4,7 @@
 [![PyPI Downloads](https://img.shields.io/pypi/dm/mcp-bitbucket-dc?label=Downloads%2Fmonth)](https://pypi.org/project/mcp-bitbucket-dc/)
 [![Total Downloads](https://static.pepy.tech/badge/mcp-bitbucket-dc)](https://pepy.tech/project/mcp-bitbucket-dc)
 [![Main Push Checks](https://github.com/christopherekfeldt/mcp-bitbucket-dc/actions/workflows/test.yml/badge.svg?branch=main&event=push)](https://github.com/christopherekfeldt/mcp-bitbucket-dc/actions/workflows/test.yml)
-[![CD: Publish to PyPI](https://github.com/christopherekfeldt/mcp-bitbucket-dc/actions/workflows/publish.yml/badge.svg)](https://github.com/christopherekfeldt/mcp-bitbucket-dc/actions/workflows/publish.yml)
+[![Release](https://github.com/christopherekfeldt/mcp-bitbucket-dc/actions/workflows/release.yml/badge.svg)](https://github.com/christopherekfeldt/mcp-bitbucket-dc/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 MCP (Model Context Protocol) server for **Bitbucket Data Center**. Enables AI assistants to search code, browse files, manage pull requests, and explore repositories through a standardized interface.
@@ -198,6 +198,14 @@ RUN_LIVE_SMOKE=1 uv run pytest -m integration -q
 ```
 
 Contributor/agent workflow guidance: see [AGENTS.md](AGENTS.md).
+
+## Versioning & Stability
+
+This project follows [Semantic Versioning](https://semver.org/). From v1.0.0 onward, tool names, required parameters, and output contracts are stable — breaking changes only in major version bumps.
+
+**Upgrade:** `uvx mcp-bitbucket-dc` always uses the latest. Pin with `uvx mcp-bitbucket-dc==X.Y.Z`.
+
+**Release notes:** See [GitHub Releases](https://github.com/christopherekfeldt/mcp-bitbucket-dc/releases) for changelogs.
 
 ## License
 
