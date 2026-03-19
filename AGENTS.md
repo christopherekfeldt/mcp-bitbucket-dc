@@ -13,7 +13,7 @@ Guidance for AI agents and contributors working in this repository.
 - `src/mcp_bitbucket_dc/`: server, client, config, models, formatting, and tool modules.
 - `src/mcp_bitbucket_dc/tools/`: user-facing Bitbucket tool implementations.
 - `tests/`: unit tests and integration smoke tests.
-- `.github/workflows/`: CI (`test.yml`) and release (`release.yml`).
+- `.github/workflows/`: CI (`test.yml`) and release (`publish.yml`).
 
 ## Local Setup
 
@@ -65,7 +65,7 @@ uv run pre-commit run --all-files
 
 ## Release Workflow
 
-Releases are automated via `release.yml` (workflow dispatch):
+Releases are automated via `publish.yml` (workflow dispatch):
 
 1. Ensure tests pass and PR is merged to `main`.
 2. Go to **Actions → Release → Run workflow**.
