@@ -13,7 +13,7 @@ Guidance for AI agents and contributors working in this repository.
 - `src/mcp_bitbucket_dc/`: server, client, config, models, formatting, and tool modules.
 - `src/mcp_bitbucket_dc/tools/`: user-facing Bitbucket tool implementations.
 - `tests/`: unit tests and integration smoke tests.
-- `.github/workflows/`: CI (`test.yml`), publish (`publish.yml`), and release (`release.yml`).
+- `.github/workflows/`: CI (`test.yml`) and release (`release.yml`).
 
 ## Local Setup
 
@@ -71,8 +71,6 @@ Releases are automated via `release.yml` (workflow dispatch):
 2. Go to **Actions → Release → Run workflow**.
 3. Enter the version (e.g. `1.0.0`) and optionally enable dry run.
 4. The workflow runs tests, creates the git tag, publishes to PyPI, and creates a GitHub Release with auto-generated notes.
-
-The legacy `publish.yml` still works as a fallback (triggered by manual tag push).
 
 ## Documentation Expectations
 

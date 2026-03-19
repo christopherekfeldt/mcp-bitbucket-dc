@@ -13,6 +13,10 @@ on:
         type: boolean
         default: false
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 permissions:
   id-token: write   # Required for trusted publishing (OIDC)
   contents: write   # Required for creating tags and releases
@@ -72,7 +76,11 @@ jobs:
       - name: Check tag does not already exist
         run: |
           if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "❌ Tag $TAG already exists"
+            echo "❌ Tag $TAG already exists locally"
+            exit 1
+          fi
+          if git ls-remote --tags origin "$TAG" | grep -q .; then
+            echo "❌ Tag $TAG already exists on remote"
             exit 1
           fi
 
@@ -94,6 +102,8 @@ jobs:
 
       - name: Build package
         run: uv build
+        env:
+          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ inputs.version }}
 
       - name: Publish to PyPI
         if: ${{ !inputs.dry_run }}
