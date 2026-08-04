@@ -36,6 +36,7 @@ class BitbucketClient:
                 "Accept": "application/json",
             },
             timeout=httpx.Timeout(30.0, connect=10.0),
+            verify=config.verify_ssl,
         )
 
     async def close(self) -> None:

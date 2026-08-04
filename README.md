@@ -149,8 +149,33 @@ UserService AND ext:java AND project:CORE
 | `BITBUCKET_HOST` | Yes* | Bitbucket DC hostname (e.g. `git.company.com`) |
 | `BITBUCKET_URL` | Yes* | Full base URL alternative (e.g. `https://git.company.com`) |
 | `BITBUCKET_API_TOKEN` | Yes | Personal Access Token |
+| `BITBUCKET_VERIFY_SSL` | No | Verify TLS certificates (default `true`). Set to `false` for self-signed or internal CA deployments. |
 
 \* Provide either `BITBUCKET_HOST` or `BITBUCKET_URL`, not both.
+
+### Disabling SSL verification
+
+For Bitbucket DC instances behind a self-signed certificate or an internal CA that
+isn't trusted by the system store, set `BITBUCKET_VERIFY_SSL=false`:
+
+```json
+{
+  "mcpServers": {
+    "bitbucket-dc": {
+      "command": "uvx",
+      "args": ["mcp-bitbucket-dc"],
+      "env": {
+        "BITBUCKET_HOST": "git.yourcompany.com",
+        "BITBUCKET_API_TOKEN": "your-personal-access-token",
+        "BITBUCKET_VERIFY_SSL": "false"
+      }
+    }
+  }
+}
+```
+
+> ⚠️ Disabling SSL verification means traffic is not protected against
+> man-in-the-middle attacks. Only use this against trusted internal networks.
 
 ## Support Matrix
 
