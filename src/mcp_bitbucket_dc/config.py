@@ -14,10 +14,13 @@ class BitbucketConfig:
         BITBUCKET_HOST: Domain + optional port (e.g. "git.company.se" or "git.company.se:7990")
         BITBUCKET_URL:  Full base URL alternative (e.g. "https://git.company.se")
         BITBUCKET_API_TOKEN: Personal Access Token for authentication
+        BITBUCKET_VERIFY_SSL: Verify TLS certificates (default "true"). Set to "false"
+            for self-signed or internal CA deployments.
     """
 
     base_url: str
     api_token: str
+    verify_ssl: bool = True
 
     @classmethod
     def from_env(cls) -> BitbucketConfig:
@@ -46,7 +49,15 @@ class BitbucketConfig:
         # Normalize: remove trailing slash
         base_url = base_url.rstrip("/")
 
-        return cls(base_url=base_url, api_token=token)
+        # SSL verification (default true); "false"/"0"/"no" disables it
+        verify_ssl = os.environ.get("BITBUCKET_VERIFY_SSL", "true").strip().lower() not in {
+            "0",
+            "false",
+            "no",
+            "off",
+        }
+
+        return cls(base_url=base_url, api_token=token, verify_ssl=verify_ssl)
 
     @property
     def rest_api_url(self) -> str:

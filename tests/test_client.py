@@ -75,3 +75,43 @@ async def test_get_paged_merges_params(client: BitbucketClient, monkeypatch):
 @pytest.mark.asyncio
 async def test_close_client(client: BitbucketClient):
     await client.close()
+
+
+@pytest.mark.asyncio
+async def test_client_passes_verify_ssl_true(monkeypatch):
+    captured: dict = {}
+    original_init = httpx.AsyncClient.__init__
+
+    def spy_init(self, *args, **kwargs):
+        captured.update(kwargs)
+        return original_init(self, *args, **kwargs)
+
+    monkeypatch.setattr(httpx.AsyncClient, "__init__", spy_init)
+
+    config = BitbucketConfig(base_url="https://git.example.com", api_token="token", verify_ssl=True)
+    client = BitbucketClient(config)
+    try:
+        assert captured.get("verify") is True
+    finally:
+        await client.close()
+
+
+@pytest.mark.asyncio
+async def test_client_passes_verify_ssl_false(monkeypatch):
+    captured: dict = {}
+    original_init = httpx.AsyncClient.__init__
+
+    def spy_init(self, *args, **kwargs):
+        captured.update(kwargs)
+        return original_init(self, *args, **kwargs)
+
+    monkeypatch.setattr(httpx.AsyncClient, "__init__", spy_init)
+
+    config = BitbucketConfig(
+        base_url="https://git.example.com", api_token="token", verify_ssl=False
+    )
+    client = BitbucketClient(config)
+    try:
+        assert captured.get("verify") is False
+    finally:
+        await client.close()
